@@ -1,0 +1,39 @@
+---
+title: "Download .mp3"
+output: html_document
+---
+
+```{r}
+library(XML)
+library(httr)
+library(stringr)
+library(xml2)
+library(rvest)
+```
+
+
+```{r}
+load("../data/sessions_urls.Rdata")
+
+mp3_sessions <- sessions_urls[!is.na(sessions_urls$mp3_url),]
+
+mp3_sessions$date3 <- as.character(mp3_sessions$date2)
+
+mp3_sessions$date3[duplicated(mp3_sessions$title)] <- 
+  paste0(mp3_sessions$date3[duplicated(mp3_sessions$title)], "_2")
+```
+
+Download
+
+```{r}
+target_folder <- "../mp3/"
+mp3_sessions
+
+for (i in 1:nrow(mp3_sessions)) {
+  download.file(url = mp3_sessions$mp3_url[i],
+                destfile = paste0(target_folder,
+                                  mp3_sessions$date3[i],
+                                  ".mp3"))
+}
+```
+

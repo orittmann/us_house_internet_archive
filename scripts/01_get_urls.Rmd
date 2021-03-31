@@ -1,5 +1,5 @@
 ---
-title: "Download House Videos"
+title: "Get urls"
 output: html_document
 ---
 
@@ -11,10 +11,6 @@ library(xml2)
 library(rvest)
 ```
 
-```{r}
-download.file(url = "http://archive-media.granicus.com:443/OnDemand/clerkhouse/clerkhouse_175a83e8-554a-4d64-b3fe-2dd90416285a.mp4",
-              destfile = "videos/16_Jan_2015")
-```
 
 ```{r}
 # get video links
@@ -64,13 +60,21 @@ for (i in 1:length(dropdown_children)) {
   cat(paste(i, "\n"))
 }
 
-save(sessions_urls, file = "sessions_urls.Rdata")
+
 ```
 
 ```{r}
-load("sessions_urls.Rdata")
+sessions_urls$date <- str_remove(sessions_urls$title,
+                                 "Summary for ")
 
-table(is.na(sessions_urls$mp3_url))
-table(is.na(sessions_urls$mp4_url))
+sessions_urls$date <- str_replace_all(sessions_urls$date,
+                                      "[:blank:]+", " ")
+
+sessions_urls$date2 <- as.Date(sessions_urls$date,
+                               format = "%B %d, %Y")
+
+save(sessions_urls, file = "../data/sessions_urls.Rdata")
+
 ```
+
 
