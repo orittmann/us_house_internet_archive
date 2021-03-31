@@ -1,0 +1,76 @@
+---
+title: "Download House Videos"
+output: html_document
+---
+
+```{r}
+library(XML)
+library(httr)
+library(stringr)
+library(xml2)
+library(rvest)
+```
+
+```{r}
+download.file(url = "http://archive-media.granicus.com:443/OnDemand/clerkhouse/clerkhouse_175a83e8-554a-4d64-b3fe-2dd90416285a.mp4",
+              destfile = "videos/16_Jan_2015")
+```
+
+```{r}
+# get video links
+
+url <- "https://webarchive.loc.gov/all/20190116015320/http://houselive.gov/ViewPublisher.php?view_id=14"
+r <- GET(url)
+doc <- htmlParse(r)
+
+# extract all links
+links <- xpathSApply(doc, "//a/@href")
+  
+# filter links: 
+videolinks <- links[str_detect(links, ".mp4")]
+```
+
+
+```{r}
+doc2 <- read_html(url)
+
+dropdown_children <- html_nodes(doc2, ".dropdown") %>% html_children()
+
+
+sessions_urls <- data.frame("title" = rep(NA, length(dropdown_children)),
+                            "mp4_url" = NA,
+                            "mp3_url" = NA,
+                            "xml_url" = NA)
+
+
+for (i in 1:length(dropdown_children)) {
+  
+  titles_tmp <- dropdown_children[i] %>% html_nodes("a") %>% html_attr("title")
+  urls_tmp <- dropdown_children[i] %>% html_nodes("a") %>% html_attr("href")
+  
+  title <- titles_tmp[!is.na(titles_tmp) & str_detect(titles_tmp, "Summary for")]
+  
+  mp4_url <- urls_tmp[str_detect(urls_tmp, ".mp4")]
+  mp3_url <- urls_tmp[str_detect(urls_tmp, ".mp3")]
+  xml_url <- urls_tmp[str_detect(urls_tmp, ".xml")]
+  
+  sessions_urls$title[i] <- ifelse(length(title) > 0, title, NA)
+  sessions_urls$mp4_url[i] <- ifelse(length(mp4_url) > 0, mp4_url, NA)
+  sessions_urls$mp3_url[i] <- ifelse(length(mp3_url) > 0, mp3_url, NA)
+  sessions_urls$xml_url[i] <- ifelse(length(xml_url) > 0, xml_url, NA)
+  
+  
+  
+  cat(paste(i, "\n"))
+}
+
+save(sessions_urls, file = "sessions_urls.Rdata")
+```
+
+```{r}
+load("sessions_urls.Rdata")
+
+table(is.na(sessions_urls$mp3_url))
+table(is.na(sessions_urls$mp4_url))
+```
+
